@@ -1,0 +1,29 @@
+# AUTO-GENERATED FILE - DO NOT EDIT!! Use ldapmodify.
+dn: olcDatabase={1}mdb
+objectClass: olcDatabaseConfig
+objectClass: olcMdbConfig
+olcDatabase: {1}mdb
+olcSuffix: SED_ORG
+olcAddContentAcl: FALSE
+olcLastMod: TRUE
+olcMaxDerefDepth: 15
+olcReadOnly: FALSE
+olcRootDN: SED_ROOTDN
+olcRootPW: SED_PASSWORD
+olcSyncUseSubentry: FALSE
+olcMonitoring: FALSE
+olcDbDirectory: /var/lib/openldap/openldap-data
+olcDbNoSync: FALSE
+olcDbIndex: objectClass eq
+olcDbMaxReaders: 0
+olcDbMaxSize: 1073741824
+olcDbMode: 0600
+olcDbSearchStack: 16
+olcDbRtxnSize: 10000
+structuralObjectClass: olcMdbConfig
+entryUUID: 5e4ba1c4-71f1-47ba-bcf9-b3baa7a5ad16
+creatorsName: cn=config
+createTimestamp: 20161223204005Z
+entryCSN: 20161223204005.252798Z#000000#000#000000
+modifiersName: cn=config
+modifyTimestamp: 20161223204005Z

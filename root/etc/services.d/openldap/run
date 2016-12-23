@@ -1,0 +1,3 @@
+#!/usr/bin/with-contenv sh
+
+exec /usr/sbin/slapd -d 256 -u ldap -g ldap -F /etc/openldap/slapd.d

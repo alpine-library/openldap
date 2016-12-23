@@ -1,0 +1,73 @@
+#!/usr/bin/with-contenv bash
+
+ulimit -n 8192
+first_run=true
+
+if [[ -f "/var/lib/openldap/INIT" ]]; then
+    first_run=false
+fi
+
+if [[ "$first_run" == "true" || "$SLAPD_FORCE_RECONFIGURE" == "true" ]]; then
+
+  if [[ -z "$SLAPD_PASSWORD" ]]; then
+        echo -n >&2 "Error: Container not configured and SLAPD_PASSWORD not set. "
+        echo >&2 "Did you forget to add -e SLAPD_PASSWORD=... ?"
+        exit 1
+    fi
+
+    if [[ -z "$SLAPD_DOMAIN" ]]; then
+        echo -n >&2 "Error: Container not configured and SLAPD_DOMAIN not set. "
+        echo >&2 "Did you forget to add -e SLAPD_DOMAIN=... ?"
+        exit 1
+    fi
+
+    SLAPD_ORGANIZATION="${SLAPD_ORGANIZATION:-${SLAPD_DOMAIN}}"
+
+    IFS="."; declare -a org_parts=($SLAPD_ORGANIZATION); unset IFS
+
+    first_org_row=true
+    for org_part in "${org_parts[@]}"; do
+        if [[ "$first_org_row" == "true" ]]; then
+          first_org_row=false
+          org_string="dc=$org_part"
+        else
+          org_string="$org_string,dc=$org_part"
+        fi
+    done
+    sed -i "s/SED_ORG/${org_string}/g" /etc/openldap/slapd.d/cn=config/olcDatabase={1}mdb.ldif
+
+
+    IFS="."; declare -a dc_parts=($SLAPD_DOMAIN); unset IFS
+
+    for dc_part in "${dc_parts[@]}"; do
+        dc_string="$dc_string,dc=$dc_part"
+    done
+
+    sed -i "s/SED_ROOTDN/cn=root${dc_string}/g" /etc/openldap/slapd.d/cn=config/olcDatabase={1}mdb.ldif
+
+     if [[ -n "$SLAPD_CONFIG_PASSWORD" ]]; then
+         password_hash=`slappasswd -s "${SLAPD_CONFIG_PASSWORD}"`
+         sed_safe_password_hash=${password_hash//\//\\\/}
+         sed -i "s/SED_PASSWORD/$sed_safe_password_hash/g" /etc/openldap/slapd.d/cn=config/olcDatabase={1}mdb.ldif
+     fi
+
+else
+  slapd_configs_in_env=`env | grep 'SLAPD_'`
+
+  if [ -n "${slapd_configs_in_env:+x}" ]; then
+      echo "Info: Container already configured, therefore ignoring SLAPD_xxx environment variables and preseed files"
+  fi
+fi
+
+if [[ "$first_run" == "true" ]]; then
+  if [[ -d "/etc/openldap/prepopulate" ]]; then
+      for file in `ls /etc/openldap/prepopulate/*.ldif`; do
+          slapadd -F /etc/openldap/slapd.d -l "$file"
+      done
+  fi
+fi
+
+chmod 777 -R /etc/openldap
+mkdir -p /var/lib/openldap/run
+touch /var/lib/openldap/INIT
+chown ldap /var/lib/openldap/run
