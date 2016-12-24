@@ -1,5 +1,8 @@
 #!/usr/bin/with-contenv bash
 
+
+### ugly hack inside ;)
+
 ulimit -n 8192
 first_run=true
 
@@ -46,8 +49,8 @@ if [[ "$first_run" == "true" || "$SLAPD_FORCE_RECONFIGURE" == "true" ]]; then
     sed -i "s/SED_ROOTDN/cn=root${dc_string}/g" /etc/openldap/slapd.d/cn=config/olcDatabase={1}mdb.ldif
 
      if [[ -n "$SLAPD_CONFIG_PASSWORD" ]]; then
-         password_hash=`slappasswd -s "${SLAPD_CONFIG_PASSWORD}"`
-         sed_safe_password_hash=$( $password_hash | sed -e 's/\([[\/.*]\|\]\)/\\&/g')
+         password_hash=`slappasswd -h {SSHA} -s ${SLAPD_PASSWORD}`
+         sed_safe_password_hash=$(echo $password_hash | sed -e 's/\([[\/.*]\|\]\)/\\&/g')
          sed -i "s/SED_PASSWORD/$sed_safe_password_hash/g" /etc/openldap/slapd.d/cn=config/olcDatabase={1}mdb.ldif
      fi
     # touch /var/lib/openldap/INIT
