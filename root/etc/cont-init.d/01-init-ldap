@@ -67,7 +67,4 @@ if [[ "$first_run" == "true" ]]; then
   fi
 fi
 
-chmod 777 -R /etc/openldap
-mkdir -p /var/lib/openldap/run
 touch /var/lib/openldap/INIT
-chown ldap /var/lib/openldap/run
